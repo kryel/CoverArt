@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CoverArt": {
+      "commandName": "Project",
+      "commandLineArgs": "-l"
+    }
+  }
+}
