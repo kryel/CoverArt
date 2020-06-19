@@ -133,13 +133,12 @@ namespace ConsoleArt.Lib
 
                     var currentFolder = Path.Combine(job.Root, artist.Name, album.Name);
 
-                    var newName = _searchPattern.Replace(coverArt, _config.ResultFileName);
-
                     var orig = Path.Combine(currentFolder, coverArt);
-                    var copy = Path.ChangeExtension(Path.Combine(currentFolder, newName), Path.GetExtension(coverArt));
+                    var copy = Path.ChangeExtension(Path.Combine(currentFolder, _config.ResultFileName), Path.GetExtension(coverArt));
 
                     var conflicts = Directory.EnumerateFiles(currentFolder, $"{_config.ResultFileName}.*")
                         .Where(f => _fileTypes.Contains(Path.GetExtension(f.ToUpperInvariant())))
+                        .Select(Path.GetFileName)
                         .ToList();
 
                     var createFile = true;
@@ -185,7 +184,8 @@ namespace ConsoleArt.Lib
                     if (createFile)
                     {
                         File.Copy(orig, copy, overwrite);
-                        _logger.LogInformation($"Kopierte {orig} til {copy}");
+                        _logger.LogDebug($"Kopierte '{orig}' til '{copy}'");
+                        _logger.LogInformation($"Kopierte '{Path.GetFileName(orig)}' til '{Path.GetFileName(copy)}'");
                     }
                 }
 
@@ -198,12 +198,16 @@ namespace ConsoleArt.Lib
                 if (Directory.Exists(newArtist))
                 {
                     _logger.LogWarning($"Kan ikke flytte '{oldArtist}' til '{newArtist}' fordi katalogen finnes allerede");
+                    if (GetConfirmation($"Vil du avslutte?"))
+                    {
+                        return;
+                    }
                 }
                 else
                 {
-                    if (GetConfirmation($"Vil du flytte '{oldArtist}' til '{newArtist}'?"))
+                    if (GetConfirmation($"Vil du flytte filen fra '{new DirectoryInfo(_config.Input).Name}' til '{new DirectoryInfo(_config.Output).Name}'?"))
                     {
-                        _logger.LogInformation($"Flytter '{oldArtist}' til '{newArtist}'");
+                        _logger.LogDebug($"Flytter '{oldArtist}' til '{newArtist}'");
                         Directory.Move(oldArtist, newArtist);
                     }
                     else
@@ -225,7 +229,7 @@ namespace ConsoleArt.Lib
                 Console.WriteLine("[J]a / [N]ei");
                 Console.Write("> ");
 
-                var line = Console.ReadLine()?.ToUpperInvariant();
+                var line = Console.ReadLine()?.ToUpperInvariant().Trim();
 
                 if (line is null)
                 {
@@ -260,7 +264,7 @@ namespace ConsoleArt.Lib
                 }
 
                 Console.Write("> ");
-                var line = Console.ReadLine()?.ToUpperInvariant();
+                var line = Console.ReadLine()?.ToUpperInvariant().Trim();
 
                 if (int.TryParse(line, out var choice))
                 {
